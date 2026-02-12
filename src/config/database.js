@@ -1,0 +1,17 @@
+const mongoose = require('mongoose');
+const config = require('.');
+
+const dbConnect = () => {
+  return mongoose
+    .connect(config.databaseURL)
+    .then(() => {
+      console.log('database has been connected');
+      return true;
+    })
+    .catch(() => {
+      console.log('cannot connect to data base');
+      return false;
+    });
+};
+
+module.exports = dbConnect;
