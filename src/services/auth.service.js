@@ -1,15 +1,41 @@
 const userModel = require('../models/user.model');
+const { encodePayload } = require('../utils/jwt.utils');
+const bcrypt = require('bcrypt');
 
-const register = async (body) => {
+const register = async (params) => {
   try {
-    const user = await userModel.create(body);
+    let existsUser = await userModel.findOne({
+      $or: [
+        {
+          username: params.username,
+        },
+        {
+          email: params.email,
+        },
+      ],
+    });
+    if (existsUser) throw new Error('username or email is already exists');
+
+    let user = new userModel(params);
+    await user.save();
     return user;
   } catch (error) {
-    console.log('Something went wrong by database', error);
+    console.log(error);
     return false;
   }
 };
 
-const authService = { register };
+const logIn = async (params) => {
+  let user = await userModel.findOne({ username: params.username });
+  if (!user) throw new Error('User or password is incorrect');
+  const passwordCompare = await bcrypt.compare(params.password, user.password);
+  if (!passwordCompare) throw new Error('User or password is incorrect');
+
+  token = encodePayload({ userId: user._id });
+  user.password = undefined;
+  return { token, user };
+};
+
+const authService = { register, logIn };
 
 module.exports = authService;

@@ -3,11 +3,19 @@ const authService = require('../services/auth.service');
 exports.register = async (req, res) => {
   const body = req.body;
 
-  const result = await authService.register(body);
-  if (!result) return res.status(400).json({ error: 'user is NOT created' });
-  res.json({ message: 'user registered successfully', result });
+  try {
+    const result = await authService.register(body);
+    if (!result) throw new Error('something went wrong, user is not registered');
+    res.json({ message: 'user registered successfully', result });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 };
 
-exports.login = (req, res) => {
-  res.json({ message: 'ok' });
+exports.logIn = async (req, res) => {
+  try {
+    res.json(await authService.logIn(req.body));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
 };
