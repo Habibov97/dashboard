@@ -1,6 +1,7 @@
 const userModel = require('../models/user.model');
-const { encodePayload } = require('../utils/jwt.utils');
 const bcrypt = require('bcrypt');
+const { encodePayload } = require('../utils/jwt.utils');
+const { DublicateError } = require('../utils/error.utils');
 
 const register = async (params) => {
   try {
@@ -14,7 +15,7 @@ const register = async (params) => {
         },
       ],
     });
-    if (existsUser) throw new Error('username or email is already exists');
+    if (existsUser) throw new DublicateError('username or email is already exists');
 
     let user = new userModel(params);
     await user.save();
