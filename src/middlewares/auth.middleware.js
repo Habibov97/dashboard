@@ -1,4 +1,5 @@
 const userService = require('../services/user.service');
+const AppError = require('../utils/appError.utils');
 const { decodePayload } = require('../utils/jwt.utils');
 
 const authMiddleware = async (req, res, next) => {
@@ -6,13 +7,13 @@ const authMiddleware = async (req, res, next) => {
   let token = headers.authorization;
 
   token = token && token.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'unauthorized' });
+  if (!token) throw new AppError('Unauthorized', 401);
 
   const result = decodePayload(token);
-  if (!result.userId) return res.status(401).json({ error: 'unauthorized' });
+  if (!result.userId) throw new AppError('Unauthorized', 401);
 
   const user = userService.findUser(result.userId);
-  if (!user) return res.status(401).json({ error: 'unauthorized' });
+  if (!user) throw new AppError('Unauthorized', 401);
 
   next();
 };

@@ -1,8 +1,15 @@
+process.on('uncaughtException', (err) => {
+  console.log(err.name, err.message);
+  console.log('UNHANDLER EXCEPTION... Shutting down!');
+
+  process.exit(1);
+});
+
 const config = require('./config');
 const express = require('express');
 const cors = require('cors');
-const AppError = require('./utils/error.utils');
-const dbConnect = require('./config/database');
+const AppError = require('./utils/appError.utils');
+require('./config/database');
 const router = require('./routes');
 const globalErrorHandler = require('./middlewares/globalErrorHandling.middleware');
 
@@ -18,13 +25,19 @@ app.get('/', (req, res) => {
 app.use('/api', router);
 
 app.use((req, res, next) => {
-  next(new AppError('Cant find url on this server', 404));
+  next(new AppError(`Cant find ${req.originalUrl} url on this server`, 404));
 });
 
 app.use(globalErrorHandler);
 
-dbConnect().then(() => {
-  app.listen(config.port, () => {
-    console.log(`listening to http://localhost:${config.port}`);
+const server = app.listen(config.port, () => {
+  console.log(`listening to http://localhost:${config.port}`);
+});
+
+process.on('unhandledRejection', (err) => {
+  console.log(err.name, err.message);
+  console.log('UNHANDLER REJECTION... Shutting down!');
+  server.close(() => {
+    process.exit(1);
   });
 });

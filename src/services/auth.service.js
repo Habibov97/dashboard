@@ -1,36 +1,31 @@
 const userModel = require('../models/user.model');
-const bcrypt = require('bcrypt');
 const { encodePayload } = require('../utils/jwt.utils');
-const { DublicateError } = require('../utils/error.utils');
+const bcrypt = require('bcrypt');
+const AppError = require('../utils/appError.utils');
 
 const register = async (params) => {
-  try {
-    let existsUser = await userModel.findOne({
-      $or: [
-        {
-          username: params.username,
-        },
-        {
-          email: params.email,
-        },
-      ],
-    });
-    if (existsUser) throw new DublicateError('username or email is already exists');
+  let existsUser = await userModel.findOne({
+    $or: [
+      {
+        username: params.username,
+      },
+      {
+        email: params.email,
+      },
+    ],
+  });
+  if (existsUser) throw new AppError('Username or email already exists', 400);
 
-    let user = new userModel(params);
-    await user.save();
-    return user;
-  } catch (error) {
-    console.log(error);
-    return false;
-  }
+  let user = new userModel(params);
+  await user.save();
+  return user;
 };
 
 const logIn = async (params) => {
   let user = await userModel.findOne({ username: params.username });
-  if (!user) throw new Error('User or password is incorrect');
+  if (!user) throw new AppError('User or password is incorrect', 400);
   const passwordCompare = await bcrypt.compare(params.password, user.password);
-  if (!passwordCompare) throw new Error('User or password is incorrect');
+  if (!passwordCompare) throw new AppError('User or password is incorrect', 400);
 
   token = encodePayload({ userId: user._id });
   user.password = undefined;
